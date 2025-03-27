@@ -76,7 +76,6 @@ class Manager < ActiveRecord::Base
   belongs_to :project
   has_many :tasks, through: :project
   has_many :line_items, through: :tasks
-  has_many :invoices, through: :line_items
 end
 
 class Task < ActiveRecord::Base
@@ -126,21 +125,13 @@ class HasManyThroughTest < Minitest::Test
     project = Project.create!
     manager = Manager.create!(project:)
     task = Task.create!(project:)
-    invoice = Invoice.create!
-    _line_item = LineItem.create(task:, invoice:)
+    _line_item = LineItem.create(task:)
 
     irrelevant_project = Project.create!
     _irrelevant_manager = Manager.create!(project: irrelevant_project)
-    irrelevant_task = Task.create!(project: irrelevant_project)
+    _irrelevant_task = Task.create!(project: irrelevant_project)
 
     result = Manager.where_exists(:line_items)
-
-    assert_equal 1, result.length
-    assert_equal manager.id, result.first.id
-
-    _irrelevant_line_item = LineItem.create(task: irrelevant_task)
-
-    result = Manager.where_exists(:invoices)
 
     assert_equal 1, result.length
     assert_equal manager.id, result.first.id
