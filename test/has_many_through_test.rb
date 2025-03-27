@@ -75,6 +75,7 @@ end
 class Manager < ActiveRecord::Base
   belongs_to :project
   has_many :tasks, through: :project
+  has_many :line_items, through: :tasks
 end
 
 class Task < ActiveRecord::Base
@@ -107,13 +108,30 @@ class HasManyThroughTest < Minitest::Test
     ActiveRecord::Base.descendants.each(&:delete_all)
   end
 
-  def test_has_many_through_belongs_to
+  def test_one_level_has_many_through_belongs_to
     project = Project.create!
     manager = Manager.create!(project:)
-    Manager.create!(project:)
     Task.create!(project:)
 
+    Manager.create!(project: Project.create!)
+
     result = Manager.where_exists(:tasks)
+
+    assert_equal 1, result.length
+    assert_equal manager.id, result.first.id
+  end
+
+  def test_deep_has_many_through_belongs_to
+    project = Project.create!
+    manager = Manager.create!(project:)
+    task = Task.create!(project:)
+    line_item = LineItem.create(task:)
+
+    project_2 = Project.create!
+    manager_2 = Manager.create!(project: project_2)
+    Task.create!(project:)
+
+    result = Manager.where_exists(:line_items)
 
     assert_equal 1, result.length
     assert_equal manager.id, result.first.id

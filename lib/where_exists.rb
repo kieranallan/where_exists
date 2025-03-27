@@ -100,7 +100,7 @@ module WhereExists
   end
 
   def where_exists_for_has_many_query(association, where_parameters, next_association = {}, &block)
-    if association.through_reflection
+    if association.through_reflection && association.through_reflection.macro != :belongs_to
       raise ArgumentError.new(association) unless association.source_reflection
       next_association = {
         association: association.source_reflection,
@@ -128,7 +128,13 @@ module WhereExists
     association_scope = next_association[:scope] || association.scope
 
     associated_model = association.klass
-    primary_key = association.options[:primary_key] || self.primary_key
+
+    primary_key =
+      if association.through_reflection&.macro == :belongs_to
+        association.through_reflection.foreign_key
+      else
+        association.options[:primary_key] || self.primary_key
+      end
 
     self_ids = quote_table_and_column_name(self.table_name, primary_key)
     associated_ids = quote_table_and_column_name(associated_model.table_name, association.foreign_key)
