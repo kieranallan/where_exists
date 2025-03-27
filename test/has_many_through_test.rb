@@ -4,6 +4,10 @@ ActiveRecord::Migration.create_table :projects, force: true do |t|
   t.string :name
 end
 
+ActiveRecord::Migration.create_table :managers, force: true do |t|
+  t.integer :project_id
+end
+
 ActiveRecord::Migration.create_table :tasks, force: true do |t|
   t.string :name
   t.integer :project_id
@@ -53,6 +57,8 @@ class Blob < ActiveRecord::Base
 end
 
 class Project < ActiveRecord::Base
+  has_many :managers
+
   has_many :tasks
   has_many :invoices, :through => :tasks
   has_many :project_line_items, :through => :tasks, :source => :line_items
@@ -64,6 +70,11 @@ class Project < ActiveRecord::Base
   has_many :relevant_blobs, through: :relevant_attachments, class_name: "Blob", source: :blob
   has_many :irrelevant_attachments, -> { where(name: "irrelevant") }, as: :record, class_name: "Attachment", inverse_of: :record, dependent: false
   has_many :irrelevant_blobs, through: :irrelevant_attachments, class_name: "Blob", source: :blob
+end
+
+class Manager < ActiveRecord::Base
+  belongs_to :project
+  has_many :tasks, through: :project
 end
 
 class Task < ActiveRecord::Base
@@ -94,6 +105,18 @@ end
 class HasManyThroughTest < Minitest::Test
   def setup
     ActiveRecord::Base.descendants.each(&:delete_all)
+  end
+
+  def test_has_many_through_belongs_to
+    project = Project.create!
+    manager = Manager.create!(project:)
+    Manager.create!(project:)
+    Task.create!(project:)
+
+    result = Manager.where_exists(:tasks)
+
+    assert_equal 1, result.length
+    assert_equal manager.id, result.first.id
   end
 
   def test_one_level_through
