@@ -100,6 +100,7 @@ module WhereExists
   end
 
   def where_exists_for_has_many_query(association, where_parameters, next_association = {}, &block)
+    # If association.through_reflection is a belongs_to, its foreign key can be used directly instead of querying its table.
     if association.through_reflection && association.through_reflection.macro != :belongs_to
       raise ArgumentError.new(association) unless association.source_reflection
       next_association = {
