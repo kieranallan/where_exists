@@ -37,7 +37,7 @@ ActiveRecord::Migration.create_table :attachments, force: true  do |t|
   t.index [ :record_type, :record_id, :name, :blob_id ], name: "index_attachments_uniqueness", unique: true
 end
 
-ActiveRecord::Migration.create_table :managers, force: true do |t|
+ActiveRecord::Migration.create_table :status_reports, force: true do |t|
   t.integer :project_id
 end
 
@@ -69,7 +69,7 @@ class Project < ActiveRecord::Base
   has_many :irrelevant_attachments, -> { where(name: "irrelevant") }, as: :record, class_name: "Attachment", inverse_of: :record, dependent: false
   has_many :irrelevant_blobs, through: :irrelevant_attachments, class_name: "Blob", source: :blob
 
-  has_many :managers
+  has_many :status_reports
 end
 
 class Task < ActiveRecord::Base
@@ -95,7 +95,7 @@ class Invoice < ActiveRecord::Base
   has_many :line_items
 end
 
-class Manager < ActiveRecord::Base
+class StatusReport < ActiveRecord::Base
   belongs_to :project
   has_many :tasks, through: :project
   has_many :line_items, through: :tasks
@@ -208,32 +208,32 @@ class HasManyThroughTest < Minitest::Test
   def test_one_level_has_many_through_belongs_to
     project = Project.create!
 
-    manager = Manager.create!(project:)
-    _irrelevant_manager = Manager.create!(project: Project.create!)
+    status_report = StatusReport.create!(project:)
+    _irrelevant_status_report = StatusReport.create!(project: Project.create!)
 
     _task = Task.create!(project:)
 
-    result = Manager.where_exists(:tasks)
+    result = StatusReport.where_exists(:tasks)
 
     assert_equal 1, result.length
-    assert_equal manager.id, result.first.id
+    assert_equal status_report.id, result.first.id
   end
 
   def test_deep_has_many_through_belongs_to
     project = Project.create!
     irrelevant_project = Project.create!
 
-    manager = Manager.create!(project:)
-    _irrelevant_manager = Manager.create!(project: irrelevant_project)
+    status_report = StatusReport.create!(project:)
+    _irrelevant_status_report = StatusReport.create!(project: irrelevant_project)
 
     task = Task.create!(project:)
     _irrelevant_task = Task.create!(project: irrelevant_project)
 
     _line_item = LineItem.create(task:)
 
-    result = Manager.where_exists(:line_items)
+    result = StatusReport.where_exists(:line_items)
 
     assert_equal 1, result.length
-    assert_equal manager.id, result.first.id
+    assert_equal status_report.id, result.first.id
   end
 end
