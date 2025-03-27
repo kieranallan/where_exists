@@ -111,9 +111,9 @@ class HasManyThroughTest < Minitest::Test
   def test_one_level_has_many_through_belongs_to
     project = Project.create!
     manager = Manager.create!(project:)
-    Task.create!(project:)
+    _task = Task.create!(project:)
 
-    Manager.create!(project: Project.create!)
+    _irrelevant_manager = Manager.create!(project: Project.create!)
 
     result = Manager.where_exists(:tasks)
 
@@ -127,9 +127,9 @@ class HasManyThroughTest < Minitest::Test
     task = Task.create!(project:)
     line_item = LineItem.create(task:)
 
-    project_2 = Project.create!
-    manager_2 = Manager.create!(project: project_2)
-    Task.create!(project:)
+    irrelevant_project = Project.create!
+    _irrelevant_manager = Manager.create!(project: irrelevant_project)
+    _irrelevant_task = Task.create!(project: irrelevant_project)
 
     result = Manager.where_exists(:line_items)
 
