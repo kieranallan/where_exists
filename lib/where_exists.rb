@@ -130,14 +130,14 @@ module WhereExists
 
     associated_model = association.klass
 
-    self_id_key =
+    self_id_column =
       if association.through_reflection&.macro == :belongs_to
         association.through_reflection.foreign_key
       else
         association.options[:primary_key] || self.primary_key
       end
 
-    self_ids = quote_table_and_column_name(self.table_name, self_id_key)
+    self_ids = quote_table_and_column_name(self.table_name, self_id_column)
     associated_ids = quote_table_and_column_name(associated_model.table_name, association.foreign_key)
 
     result = associated_model.select("1").where("#{associated_ids} = #{self_ids}")
